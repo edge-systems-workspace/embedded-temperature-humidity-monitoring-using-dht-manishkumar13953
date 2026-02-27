@@ -21,34 +21,62 @@
 
 // TODO 3:
 // Create a DHT object using the defined pin and sensor type
+#define DHTPIN 2
 
-void setup() {
+byte data[5];
 
-    // TODO 4:
-    // Initialize Serial communication (9600 baud rate)
-
-    // TODO 5:
-    // Initialize the DHT sensor
-
-    // TODO 6:
-    // Print a system initialization message
+void setup()
+{
+  Serial.begin(9600);
+  pinMode(DHTPIN, OUTPUT);
 }
 
-void loop() {
+void loop()
+{
+  if (readDHT())
+  {
+    Serial.print("Temperature: ");
+    Serial.print(data[2]);
+    Serial.print(" °C  ");
 
-    // TODO 7:
-    // Read humidity value from sensor
+    Serial.print("Humidity: ");
+    Serial.print(data[0]);
+    Serial.println(" %");
+  }
+  else
+  {
+    Serial.println("Error reading DHT11");
+  }
 
-    // TODO 8:
-    // Read temperature value from sensor
+  delay(2000);
+}
 
-    // TODO 9:
-    // Check if either reading failed using isnan()
-    // If failed, print error message and return
+int readDHT()
+{
+  byte i, j;
 
-    // TODO 10:
-    // Print formatted temperature and humidity values
+  for (i = 0; i < 5; i++)
+    data[i] = 0;
 
-    // TODO 11:
-    // Add a 2-second delay before next reading
+  pinMode(DHTPIN, OUTPUT);
+  digitalWrite(DHTPIN, LOW);
+  delay(20);
+  digitalWrite(DHTPIN, HIGH);
+  delayMicroseconds(30);
+  pinMode(DHTPIN, INPUT);
+
+  if (pulseIn(DHTPIN, LOW) == 0) return 0;
+  if (pulseIn(DHTPIN, HIGH) == 0) return 0;
+
+  for (i = 0; i < 40; i++)
+  {
+    pulseIn(DHTPIN, LOW);
+    if (pulseIn(DHTPIN, HIGH) > 40)
+      data[i / 8] |= (1 << (7 - (i % 8)));
+  }
+
+  if (data[4] == (data[0] + data[1] + data[2] + data[3]))
+    return 1;
+  else
+    return 0;
 }
